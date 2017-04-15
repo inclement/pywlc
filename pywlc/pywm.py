@@ -32,6 +32,32 @@ def get_topmost(output, offset):
         return views[(memb - 1 + offset) % memb]
     return 0
 
+def start_interactive_move(view, origin):
+    start_interactive_action(view, origin)
+
+def start_interactive_action(view, origin):
+    if compositor.view:
+        return False
+    compositor.view = view
+    compositor.grab = origin[0]
+    lib.wlc_view_bring_to_front(view)
+    return True
+
+def start_interactive_resize(view, edges, origin):
+    g = lib.wlc_view_get_geometry(view)
+    print('g is', g)
+    if not g or not start_interactive_action(view, origin):
+        return
+
+    halfw = g.origin.x + g.size.w / 2.
+    halfh = g.origin.y + g.size.h / 2.
+
+    compositor.edges = edges
+    if edges != 0:
+        compositor.edges = None  # wrong
+
+    lib.wlc_view_set_state(view, lib.WLC_BIT_RESIZING, 1)
+
 @ffi.def_extern()
 def output_resolution(output, from_size, to_size):
     print('output_resolution', output, from_size, to_size)
@@ -55,20 +81,22 @@ def view_destroyed(view):
 @ffi.def_extern()
 def view_focus(view, focus):
     print('view_focus', view, focus)
-
     lib.wlc_view_set_state(view, lib.WLC_BIT_ACTIVATED, focus)
 
 @ffi.def_extern()
 def view_request_move(view, origin):
     print('view_request_move')
+    start_interactive_move(view, origin)
 
 @ffi.def_extern()
 def view_request_resize(view, edges, origin):
     print('view_request_resize')
+    start_interactive_resize(view, edges, origin)
 
 @ffi.def_extern()
 def view_request_geometry(view, geometry):
     print('view_request_geometry')
+    # intentionally blank in example.c
 
 @ffi.def_extern()
 def keyboard_key(view, time, modifiers, key, state):
