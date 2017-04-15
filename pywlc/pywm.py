@@ -114,7 +114,9 @@ def keyboard_key(view, time, modifiers, key, state):
             return 1
         elif sym == lib.XKB_KEY_Return and state == lib.WLC_KEY_STATE_PRESSED:
             weston_terminal = ffi.new('char[]', b'weston-terminal')
-            lib.wlc_exec(weston_terminal, ffi.NULL)
+            args = ffi.new('char * []', [weston_terminal, ffi.NULL])
+            lib.wlc_exec(weston_terminal, args)
+            # lib.wlc_exec(weston_terminal, ffi.NULL)
             print('execd weston-terminal')
             return 1
 
