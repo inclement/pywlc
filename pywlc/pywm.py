@@ -3,8 +3,15 @@ from wlc import ffi, lib
 
 from collections import namedtuple
 
-Compositor = namedtuple('Compositor', ['view', 'grab', 'edges'])
-compositor = Compositor(None, None, None)
+# Compositor = namedtuple('Compositor', ['view', 'grab', 'edges'])
+# compositor = Compositor(None, None, None)
+
+class Compositor:
+    view = None
+    grab = None
+    edges = None
+
+compositor = Compositor()
 
 def relayout(output):
     size = lib.wlc_output_get_virtual_resolution(output)
@@ -29,7 +36,7 @@ def get_topmost(output, offset):
     memb = ffi.new('size_t *')
     views = lib.wlc_output_get_views(output, memb)
     if memb[0] > 0:
-        return views[(memb - 1 + offset) % memb]
+        return views[(memb[0] - 1 + offset) % memb[0]]
     return 0
 
 def start_interactive_move(view, origin):
@@ -57,6 +64,17 @@ def start_interactive_resize(view, edges, origin):
         compositor.edges = None  # wrong
 
     lib.wlc_view_set_state(view, lib.WLC_BIT_RESIZING, 1)
+
+
+def stop_interactive_action():
+    if compositor.view is None:
+        return
+
+    lib.wlc_view_set_state(compositor.view, lib.WLC_BIT_RESIZING, 0)
+
+    compositor.view = None
+    compositor.grab = None
+    compositor.edges = None
 
 @ffi.def_extern()
 def output_resolution(output, from_size, to_size):
@@ -138,14 +156,16 @@ def pointer_button(view, time, modifiers, button, state, position):
             if (modifiers.mods & lib.WLC_BIT_MOD_CTRL) and button == lib.BTN_LEFT:
                 start_interactive_move(view, position)
             if (modifiers.mods & lib.WLC_BIT_MOD_CTRL) and button == lib.BTN_RIGHT:
-                start_interactive_resize(view, position)
+                start_interactive_resize(view, 0, position)
 
-    if (modifiers.mods & lib.WLC_BIT_MOD_CTRL) and button == lib.BTN_LEFT:
-        print('left button')
-    if (modifiers.mods & lib.WLC_BIT_MOD_CTRL) and button == lib.BTN_RIGHT:
-        print('right button')
+    else:
+        stop_interactive_action()
 
-    return 0  # return 1 to prevent sending event to clients
+    print('compositor.view is', compositor.view)
+    if compositor.view is not None:
+        return 1
+
+    return 0
 
 @ffi.def_extern()
 def pointer_motion(handle, time, position):
