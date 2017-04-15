@@ -11,5 +11,8 @@ ffibuilder.set_source('wlc',
 
 with open('wlc_cdef.h', 'r') as fileh:
     ffibuilder.cdef(fileh.read())
+
+with open('extern_cdef.h', 'r') as fileh:
+    ffibuilder.cdef(fileh.read())
  
 ffibuilder.compile(verbose=True)
