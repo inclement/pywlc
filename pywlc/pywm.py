@@ -101,15 +101,47 @@ def view_request_geometry(view, geometry):
 @ffi.def_extern()
 def keyboard_key(view, time, modifiers, key, state):
     print('keyboard_key', view, time, modifiers, key, state)
-    weston_terminal = ffi.new('char[]', b'weston-terminal')
-    if key == 28:
-        lib.wlc_exec(weston_terminal, ffi.NULL)
+
+    sym = lib.wlc_keyboard_get_keysym_for_key(key, ffi.NULL)
+    print('sym', sym)
+
+    if view:
+        print('view is not 0!')
+
+    if (modifiers.mods & lib.WLC_BIT_MOD_CTRL):
+        if sym == lib.XKB_KEY_Escape and state == lib.WLC_KEY_STATE_PRESSED:
+            lib.wlc_terminate()
+            return 1
+        elif sym == lib.XKB_KEY_Return and state == lib.WLC_KEY_STATE_PRESSED:
+            weston_terminal = ffi.new('char[]', b'weston-terminal')
+            lib.wlc_exec(weston_terminal, ffi.NULL)
+            print('execd weston-terminal')
+            return 1
+
+        if sym >= lib.XKB_KEY_1 and sym <= lib.XKB_KEY_9:
+            if state == lib.WLC_KEY_STATE_PRESSED:
+                print('ctrl + number in 1-9')
+
     return 0
 
 @ffi.def_extern()
-def pointer_button(handle, time, modifiers, button, state, position):
-    print('pointer_button', handle, time, modifiers, button, state, position)
+def pointer_button(view, time, modifiers, button, state, position):
+    print('pointer_button', view, time, modifiers, button, state, position)
     lib.wlc_pointer_set_position(position)
+
+    if state == lib.WLC_BUTTON_STATE_PRESSED:
+        lib.wlc_view_focus(view)
+
+        if view:
+            if (modifiers.mods & lib.WLC_BIT_MOD_CTRL) and button == lib.BTN_LEFT:
+                start_interactive_move(view, position)
+            if (modifiers.mods & lib.WLC_BIT_MOD_CTRL) and button == lib.BTN_RIGHT:
+                start_interactive_resize(view, position)
+
+    if (modifiers.mods & lib.WLC_BIT_MOD_CTRL) and button == lib.BTN_LEFT:
+        print('left button')
+    if (modifiers.mods & lib.WLC_BIT_MOD_CTRL) and button == lib.BTN_RIGHT:
+        print('right button')
 
     return 0  # return 1 to prevent sending event to clients
 
