@@ -9,6 +9,8 @@ from collections import namedtuple
 class Compositor:
     view = None
     grab = None
+    grab_x = 0
+    grab_y = 0
     edges = None
 
 compositor = Compositor()
@@ -90,7 +92,10 @@ def start_interactive_action(view, origin):
     if compositor.view:
         return False
     compositor.view = view
-    compositor.grab = origin[0]
+    compositor.grab = origin
+    compositor.grab_x = compositor.grab.x
+    compositor.grab_y = compositor.grab.y
+    print('at start', compositor.grab.x, compositor.grab.y)
     lib.wlc_view_bring_to_front(view)
     return True
 
@@ -104,8 +109,8 @@ def start_interactive_resize(view, edges, origin):
     halfh = g.origin.y + g.size.h / 2.
 
     compositor.edges = edges
-    if edges != 0:
-        compositor.edges = None  # wrong
+    # if edges != 0:
+    #     compositor.edges = None  # wrong
 
     lib.wlc_view_set_state(view, lib.WLC_BIT_RESIZING, 1)
 
@@ -196,7 +201,8 @@ def pointer_button(view, time, modifiers, button, state, position):
     if state == lib.WLC_BUTTON_STATE_PRESSED:
         lib.wlc_view_focus(view)
 
-        if view:
+        print('button position', position.x, position.y)
+        if view is not None:
             if (modifiers.mods & lib.WLC_BIT_MOD_CTRL) and button == lib.BTN_LEFT:
                 start_interactive_move(view, position)
             if (modifiers.mods & lib.WLC_BIT_MOD_CTRL) and button == lib.BTN_RIGHT:
@@ -214,9 +220,28 @@ def pointer_button(view, time, modifiers, button, state, position):
 @ffi.def_extern()
 def pointer_motion(handle, time, position):
     # print('pointer_motion', handle, time, position)
-    lib.wlc_pointer_set_position(position)
+    if compositor.view is not None:
+        print('moving', position.x, position.y, compositor.grab.x, compositor.grab.y, compositor.grab_x, compositor.grab_y)
+        dx = position.x - compositor.grab_x
+        dy = position.y - compositor.grab_y
+        g = lib.wlc_view_get_geometry(compositor.view)
 
-    return 0  # return 1 to prevent sending event to clients
+        if compositor.edges is not None:
+            mins = (80, 40)
+        else:
+            print('dx is', dx)
+            print('dy is', dy)
+            g.origin.x += dx
+            g.origin.y += dy
+            lib.wlc_view_set_geometry(compositor.view, 0, g)
+
+        compositor.grab = position
+        compositor.grab_x = position.x
+        compositor.grab_y = position.y
+            
+
+    lib.wlc_pointer_set_position(position)
+    return 1 if compositor.view else 0
 
 lib.wlc_set_output_resolution_cb(lib.output_resolution)
 lib.wlc_set_view_created_cb(lib.view_created)
