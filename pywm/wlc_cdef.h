@@ -449,7 +449,7 @@ enum wlc_positioner_constraint_adjustment_bit wlc_view_positioner_get_constraint
 void wlc_view_get_visible_geometry(wlc_handle, struct wlc_geometry *out_geometry);
 
 /* /\** Set geometry. Set edges if the geometry change is caused by interactive resize. *\/ */
-/* WLC_NONULL void wlc_view_set_geometry(wlc_handle, uint32_t edges, const struct wlc_geometry *geometry); */
+void wlc_view_set_geometry(wlc_handle, uint32_t edges, const struct wlc_geometry *geometry);
 
 /** Get type bitfield. */
 uint32_t wlc_view_get_type(wlc_handle);

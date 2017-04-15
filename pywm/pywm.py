@@ -1,4 +1,4 @@
-
+from __future__ import division
 from wlc import ffi, lib
 
 from collections import namedtuple
@@ -14,6 +14,7 @@ class Compositor:
 compositor = Compositor()
 
 def relayout(output):
+    print('RELAYOUT')
     size = lib.wlc_output_get_virtual_resolution(output)
     print('size is', size)
 
@@ -23,14 +24,57 @@ def relayout(output):
 
     positioned = 0
     for i in range(0, memb[0]):
-        print(lib.wlc_view_positioner_get_anchor_rect(views[i]))
-        positioned += 1
+        if lib.wlc_view_positioner_get_anchor_rect(views[i]) == ffi.NULL:
+            positioned += 1
 
-    toggle = False
-
+    toggle = 0
     y = 0
+
+    n = max((1 + positioned) // 2, 1)
+    w = size.w // 2
+    h = size.h // n
+    ew = size.w - w * 2
+    eh = size.h - h * n
+    j = 0
+
+    print('w', w, 'h', h, 'ew', ew, 'eh', eh)
+
+    for i in range(0, memb[0]):
+        anchor_rect = lib.wlc_view_positioner_get_anchor_rect(views[i])
+        print('anchor rect is', anchor_rect, anchor_rect == ffi.NULL)
+        if anchor_rect == ffi.NULL:
+            g = ffi.new('struct wlc_geometry *')
+            g.origin.x = w + ew if toggle else 0
+            g.origin.y = y
+            g.size.w = size.w if ((1 - toggle) and j == positioned - 1) else (w if toggle else w + ew)
+            g.size.h = h + eh if j < 2 else h
+
+            lib.wlc_view_set_geometry(views[i], 0, g)
+            toggle = 1 - toggle
+            y = y + (g.size.h if not toggle else 0)
+            j += 1
+
+        else:
+            size_req = lib.wlc_view_positioner_get_size(views[i])[0]
+            if size_req.w <= 0 or size_req.h <= 0:
+                current = lib.wlc_view_get_geometry(views[i])
+                size_req = current.size
+
+            g = ffi.new('struct wlc_geometry *')
+            g.origin = anchor_rect.origin
+            g.size = size_req
+
+            parent = lib.wlc_view_get_parent(views[i])
+
+            if parent:
+                parent_geometry = lib.wlc_view_get_geometry(parent)
+                g.origin.x += parent_geometry.origin.x
+                g.origin.y += parent_geometry.origin.y
+
+            lib.wlc_view_set_geometry(views[i], 0, g)
+            print('second condition happened')
+            
     
-    print('RELAYOUT')
 
 def get_topmost(output, offset):
     memb = ffi.new('size_t *')
@@ -124,7 +168,7 @@ def keyboard_key(view, time, modifiers, key, state):
     print('sym', sym)
 
     if view:
-        print('view is not 0!')
+        pass
 
     if (modifiers.mods & lib.WLC_BIT_MOD_CTRL):
         if sym == lib.XKB_KEY_Escape and state == lib.WLC_KEY_STATE_PRESSED:
