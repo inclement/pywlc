@@ -9,7 +9,8 @@ pywlc has been tested only with Python 3, but it might work with Python 2.
 Install
 -------
 
-Install as a normal python module:
+You must first install [wlc](https://github.com/Cloudef/wlc), then
+install pywlc as a normal python module:
 
     $ python3 setup.py install
 
