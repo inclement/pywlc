@@ -126,12 +126,12 @@ def stop_interactive_action():
 
 
 @ffi.def_extern()
-def output_resolution(output, from_size, to_size):
+def _example_output_resolution(output, from_size, to_size):
     relayout(output)
 
 
 @ffi.def_extern()
-def view_created(view):
+def _example_view_created(view):
     lib.wlc_view_set_mask(
         view, lib.wlc_output_get_mask(lib.wlc_view_get_output(view)))
     lib.wlc_view_bring_to_front(view)
@@ -141,34 +141,34 @@ def view_created(view):
 
 
 @ffi.def_extern()
-def view_destroyed(view):
+def _example_view_destroyed(view):
     lib.wlc_view_focus(get_topmost(lib.wlc_view_get_output(view), 0))
     relayout(lib.wlc_view_get_output(view))
 
 
 @ffi.def_extern()
-def view_focus(view, focus):
+def _example_view_focus(view, focus):
     lib.wlc_view_set_state(view, lib.WLC_BIT_ACTIVATED, focus)
 
 
 @ffi.def_extern()
-def view_request_move(view, origin):
+def _example_view_request_move(view, origin):
     start_interactive_move(view, origin)
 
 
 @ffi.def_extern()
-def view_request_resize(view, edges, origin):
+def _example_view_request_resize(view, edges, origin):
     start_interactive_resize(view, edges, origin)
 
 
 @ffi.def_extern()
-def view_request_geometry(view, geometry):
+def _example_view_request_geometry(view, geometry):
     pass
     # intentionally blank in example.c
 
 
 @ffi.def_extern()
-def keyboard_key(view, time, modifiers, key, state):
+def _example_keyboard_key(view, time, modifiers, key, state):
 
     sym = lib.wlc_keyboard_get_keysym_for_key(key, ffi.NULL)
 
@@ -215,7 +215,7 @@ def keyboard_key(view, time, modifiers, key, state):
 
 
 @ffi.def_extern()
-def pointer_button(view, time, modifiers, button, state, position):
+def _example_pointer_button(view, time, modifiers, button, state, position):
     lib.wlc_pointer_set_position(position)
 
     if state == lib.WLC_BUTTON_STATE_PRESSED:
@@ -237,7 +237,7 @@ def pointer_button(view, time, modifiers, button, state, position):
 
 
 @ffi.def_extern()
-def pointer_motion(handle, time, position):
+def _example_pointer_motion(handle, time, position):
     if compositor.view is not None:
         dx = position.x - compositor.grab.x
         dy = position.y - compositor.grab.y
@@ -276,16 +276,16 @@ def pointer_motion(handle, time, position):
 
 
 def main():
-    lib.wlc_set_output_resolution_cb(lib.output_resolution)
-    lib.wlc_set_view_created_cb(lib.view_created)
-    lib.wlc_set_view_destroyed_cb(lib.view_destroyed)
-    lib.wlc_set_view_focus_cb(lib.view_focus)
-    lib.wlc_set_view_request_move_cb(lib.view_request_move)
-    lib.wlc_set_view_request_resize_cb(lib.view_request_resize)
-    lib.wlc_set_view_request_geometry_cb(lib.view_request_geometry)
-    lib.wlc_set_keyboard_key_cb(lib.keyboard_key)
-    lib.wlc_set_pointer_button_cb(lib.pointer_button)
-    lib.wlc_set_pointer_motion_cb(lib.pointer_motion)
+    lib.wlc_set_output_resolution_cb(lib._example_output_resolution)
+    lib.wlc_set_view_created_cb(lib._example_view_created)
+    lib.wlc_set_view_destroyed_cb(lib._example_view_destroyed)
+    lib.wlc_set_view_focus_cb(lib._example_view_focus)
+    lib.wlc_set_view_request_move_cb(lib._example_view_request_move)
+    lib.wlc_set_view_request_resize_cb(lib._example_view_request_resize)
+    lib.wlc_set_view_request_geometry_cb(lib._example_view_request_geometry)
+    lib.wlc_set_keyboard_key_cb(lib._example_keyboard_key)
+    lib.wlc_set_pointer_button_cb(lib._example_pointer_button)
+    lib.wlc_set_pointer_motion_cb(lib._example_pointer_motion)
 
     if lib.wlc_init() != 1:
         raise ValueError('wlc_init did not return 1')
