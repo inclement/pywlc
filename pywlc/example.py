@@ -241,18 +241,20 @@ def pointer_motion(handle, time, position):
     lib.wlc_pointer_set_position(position)
     return 1 if compositor.view is not None else 0
 
-lib.wlc_set_output_resolution_cb(lib.output_resolution)
-lib.wlc_set_view_created_cb(lib.view_created)
-lib.wlc_set_view_destroyed_cb(lib.view_destroyed)
-lib.wlc_set_view_focus_cb(lib.view_focus)
-lib.wlc_set_view_request_move_cb(lib.view_request_move)
-lib.wlc_set_view_request_resize_cb(lib.view_request_resize)
-lib.wlc_set_view_request_geometry_cb(lib.view_request_geometry)
-lib.wlc_set_keyboard_key_cb(lib.keyboard_key)
-lib.wlc_set_pointer_button_cb(lib.pointer_button)
-lib.wlc_set_pointer_motion_cb(lib.pointer_motion)
+if __name__ == "__main__":
 
-if lib.wlc_init() != 1:
-    exit(1)
+    lib.wlc_set_output_resolution_cb(lib.output_resolution)
+    lib.wlc_set_view_created_cb(lib.view_created)
+    lib.wlc_set_view_destroyed_cb(lib.view_destroyed)
+    lib.wlc_set_view_focus_cb(lib.view_focus)
+    lib.wlc_set_view_request_move_cb(lib.view_request_move)
+    lib.wlc_set_view_request_resize_cb(lib.view_request_resize)
+    lib.wlc_set_view_request_geometry_cb(lib.view_request_geometry)
+    lib.wlc_set_keyboard_key_cb(lib.keyboard_key)
+    lib.wlc_set_pointer_button_cb(lib.pointer_button)
+    lib.wlc_set_pointer_motion_cb(lib.pointer_motion)
 
-lib.wlc_run()
+    if lib.wlc_init() != 1:
+        raise ValueError('wlc_init did not return 1')
+
+    lib.wlc_run()
