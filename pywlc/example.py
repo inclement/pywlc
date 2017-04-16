@@ -13,13 +13,10 @@ compositor = Compositor()
 updated.'''
 
 def relayout(output):
-    print('RELAYOUT')
     size = lib.wlc_output_get_virtual_resolution(output)
-    print('size is', size)
 
     memb = ffi.new('size_t *')
     views = lib.wlc_output_get_views(output, memb)
-    print('memb is', memb[0])
 
     positioned = 0
     for i in range(0, memb[0]):
@@ -36,11 +33,8 @@ def relayout(output):
     eh = size.h - h * n
     j = 0
 
-    print('w', w, 'h', h, 'ew', ew, 'eh', eh)
-
     for i in range(0, memb[0]):
         anchor_rect = lib.wlc_view_positioner_get_anchor_rect(views[i])
-        print('anchor rect is', anchor_rect, anchor_rect == ffi.NULL)
         if anchor_rect == ffi.NULL:
             g = ffi.new('struct wlc_geometry *')
             g.origin.x = w + ew if toggle else 0
@@ -71,7 +65,6 @@ def relayout(output):
                 g.origin.y += parent_geometry.origin.y
 
             lib.wlc_view_set_geometry(views[i], 0, g)
-            print('second condition happened')
             
     
 
@@ -98,7 +91,6 @@ def start_interactive_action(view, origin):
 
 def start_interactive_resize(view, edges, origin):
     g = lib.wlc_view_get_geometry(view)
-    print('g is', g)
     if not g or not start_interactive_action(view, origin):
         return
 
@@ -124,12 +116,10 @@ def stop_interactive_action():
 
 @ffi.def_extern()
 def output_resolution(output, from_size, to_size):
-    print('output_resolution', output, from_size, to_size)
     relayout(output)
     
 @ffi.def_extern()
 def view_created(view):
-    print('view_created', view)
     lib.wlc_view_set_mask(view, lib.wlc_output_get_mask(lib.wlc_view_get_output(view)))
     lib.wlc_view_bring_to_front(view)
     lib.wlc_view_focus(view)
@@ -138,36 +128,30 @@ def view_created(view):
 
 @ffi.def_extern()
 def view_destroyed(view):
-    print('view_destroyed', view)
     lib.wlc_view_focus(get_topmost(lib.wlc_view_get_output(view), 0))
     relayout(lib.wlc_view_get_output(view))
 
 @ffi.def_extern()
 def view_focus(view, focus):
-    print('view_focus', view, focus)
     lib.wlc_view_set_state(view, lib.WLC_BIT_ACTIVATED, focus)
 
 @ffi.def_extern()
 def view_request_move(view, origin):
-    print('view_request_move')
     start_interactive_move(view, origin)
 
 @ffi.def_extern()
 def view_request_resize(view, edges, origin):
-    print('view_request_resize')
     start_interactive_resize(view, edges, origin)
 
 @ffi.def_extern()
 def view_request_geometry(view, geometry):
-    print('view_request_geometry')
+    pass
     # intentionally blank in example.c
 
 @ffi.def_extern()
 def keyboard_key(view, time, modifiers, key, state):
-    print('keyboard_key', view, time, modifiers, key, state)
 
     sym = lib.wlc_keyboard_get_keysym_for_key(key, ffi.NULL)
-    print('sym', sym)
 
     if view:
         if (modifiers.mods & lib.WLC_BIT_MOD_CTRL) and sym == lib.XKB_KEY_q:
@@ -198,7 +182,6 @@ def keyboard_key(view, time, modifiers, key, state):
                 outputs = lib.wlc_get_outputs(memb)
                 scale = (sym - lib.XKB_KEY_1) + 1
 
-                print('num outputs', memb[0])
                 for i in range(memb[0]):
                     lib.wlc_output_set_resolution(outputs[i], lib.wlc_output_get_resolution(outputs[i]), scale)
 
@@ -206,13 +189,11 @@ def keyboard_key(view, time, modifiers, key, state):
 
 @ffi.def_extern()
 def pointer_button(view, time, modifiers, button, state, position):
-    print('pointer_button', view, time, modifiers, button, state, position)
     lib.wlc_pointer_set_position(position)
 
     if state == lib.WLC_BUTTON_STATE_PRESSED:
         lib.wlc_view_focus(view)
 
-        print('button position', position.x, position.y)
         if view is not None:
             if (modifiers.mods & lib.WLC_BIT_MOD_CTRL) and button == lib.BTN_LEFT:
                 start_interactive_move(view, position)
@@ -222,7 +203,6 @@ def pointer_button(view, time, modifiers, button, state, position):
     else:
         stop_interactive_action()
 
-    print('compositor.view is', compositor.view)
     if compositor.view is not None:
         return 1
 
@@ -230,22 +210,14 @@ def pointer_button(view, time, modifiers, button, state, position):
 
 @ffi.def_extern()
 def pointer_motion(handle, time, position):
-    # print('pointer_motion', handle, time, position)
     if compositor.view is not None:
-        print('moving', position.x, position.y, compositor.grab.x, compositor.grab.y, compositor.grab.x, compositor.grab.y)
         dx = position.x - compositor.grab.x
         dy = position.y - compositor.grab.y
         g = lib.wlc_view_get_geometry(compositor.view)
 
-        print('dx dy', dx, dy)
-
         if compositor.edges is not None:
             min_w = 80
             min_h = 40
-
-            print('edges not None')
-
-            print(g.size.w, g.size.h, min_w, min_h)
 
             if g.size.w >= min_w:
                 if compositor.edges & lib.WLC_RESIZE_EDGE_LEFT:
@@ -264,8 +236,6 @@ def pointer_motion(handle, time, position):
             lib.wlc_view_set_geometry(compositor.view, compositor.edges, g)
             
         else:
-            print('dx is', dx)
-            print('dy is', dy)
             g.origin.x += dx
             g.origin.y += dy
             lib.wlc_view_set_geometry(compositor.view, 0, g)
