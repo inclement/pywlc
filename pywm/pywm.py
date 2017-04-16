@@ -3,15 +3,14 @@ from wlc import ffi, lib
 
 from collections import namedtuple
 
-# Compositor = namedtuple('Compositor', ['view', 'grab', 'edges'])
-# compositor = Compositor(None, None, None)
-
 class Compositor:
     view = None
     grab = None
     edges = None
 
 compositor = Compositor()
+'''Global object to hold details of any view that is currently being
+updated.'''
 
 def relayout(output):
     print('RELAYOUT')
@@ -107,8 +106,8 @@ def start_interactive_resize(view, edges, origin):
     halfh = g.origin.y + g.size.h / 2.
 
     compositor.edges = edges
-    # if edges != 0:
-    #     compositor.edges = None  # wrong
+    if edges != 0:
+        compositor.edges = (lib.WLC_RESIZE_EDGE_LEFT if origin.x < halfw else (lib.WLC_RESIZE_EDGE_RIGHT if origin.x > halfw else 0)) | (lib.WLC_RESIZE_EDGE_TOP if origin.y < halfh else (lib.WLC_RESIZE_EDGE_BOTTOM if origin.y > halfh else 0))
 
     lib.wlc_view_set_state(view, lib.WLC_BIT_RESIZING, 1)
 
@@ -219,13 +218,15 @@ def pointer_button(view, time, modifiers, button, state, position):
 def pointer_motion(handle, time, position):
     # print('pointer_motion', handle, time, position)
     if compositor.view is not None:
-        print('moving', position.x, position.y, compositor.grab.x, compositor.grab.y, compositor.grab_x, compositor.grab_y)
+        print('moving', position.x, position.y, compositor.grab.x, compositor.grab.y, compositor.grab.x, compositor.grab.y)
         dx = position.x - compositor.grab.x
         dy = position.y - compositor.grab.y
         g = lib.wlc_view_get_geometry(compositor.view)
 
         if compositor.edges is not None:
             mins = (80, 40)
+            
+            
         else:
             print('dx is', dx)
             print('dy is', dy)
@@ -238,7 +239,7 @@ def pointer_motion(handle, time, position):
             
 
     lib.wlc_pointer_set_position(position)
-    return 1 if compositor.view else 0
+    return 1 if compositor.view is not None else 0
 
 lib.wlc_set_output_resolution_cb(lib.output_resolution)
 lib.wlc_set_view_created_cb(lib.view_created)
