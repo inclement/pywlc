@@ -1,4 +1,4 @@
-from __future__ import division
+from __future__ import division, print_function
 from wlc import ffi, lib
 
 from collections import namedtuple
@@ -9,8 +9,6 @@ from collections import namedtuple
 class Compositor:
     view = None
     grab = None
-    grab_x = 0
-    grab_y = 0
     edges = None
 
 compositor = Compositor()
@@ -92,10 +90,10 @@ def start_interactive_action(view, origin):
     if compositor.view:
         return False
     compositor.view = view
-    compositor.grab = origin
-    compositor.grab_x = compositor.grab.x
-    compositor.grab_y = compositor.grab.y
-    print('at start', compositor.grab.x, compositor.grab.y)
+    grab = ffi.new('struct wlc_point *')
+    grab.x = origin.x
+    grab.y = origin.y
+    compositor.grab = grab
     lib.wlc_view_bring_to_front(view)
     return True
 
@@ -222,8 +220,8 @@ def pointer_motion(handle, time, position):
     # print('pointer_motion', handle, time, position)
     if compositor.view is not None:
         print('moving', position.x, position.y, compositor.grab.x, compositor.grab.y, compositor.grab_x, compositor.grab_y)
-        dx = position.x - compositor.grab_x
-        dy = position.y - compositor.grab_y
+        dx = position.x - compositor.grab.x
+        dy = position.y - compositor.grab.y
         g = lib.wlc_view_get_geometry(compositor.view)
 
         if compositor.edges is not None:
@@ -235,9 +233,8 @@ def pointer_motion(handle, time, position):
             g.origin.y += dy
             lib.wlc_view_set_geometry(compositor.view, 0, g)
 
-        compositor.grab = position
-        compositor.grab_x = position.x
-        compositor.grab_y = position.y
+        compositor.grab.x = position.x
+        compositor.grab.y = position.y
             
 
     lib.wlc_pointer_set_position(position)
