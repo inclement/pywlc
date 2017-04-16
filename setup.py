@@ -14,7 +14,7 @@ package_data = {'pywlc': ['*.py',
 data_files = []
 
 setup(name='pywlc',
-      version='1.0',
+      version='0.1',
       description='Python cffi wrapper for wlc (a Wayland compositor library)',
       author='Alexander Taylor',
       author_email='alexanderjohntaylor@gmail.com',

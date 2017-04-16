@@ -17,6 +17,20 @@ install pywlc as a normal python module:
 Example
 -------
 
+Basic usage:
+
+    >>> from pywlc import lib, ffi
+
+    >>> lib.wlc_init()
+    
+    >>> lib.wlc_run()  # starts wlc (but with no extra behaviour)
+    
+Access wlc functions using the `lib` object. It wraps all the
+functions in `wlc.h`, plus some other wlc data structures. Other
+instructions for working with `lib` and `ffi` can be found in
+the
+[cffi documentation](http://cffi.readthedocs.io/en/latest/using.html).
+
 An example window manager using these bindings is provided at
 `pywlc/example.py`. It is a clone of the C example from
 the
