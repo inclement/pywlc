@@ -106,7 +106,7 @@ def start_interactive_resize(view, edges, origin):
     halfh = g.origin.y + g.size.h / 2.
 
     compositor.edges = edges
-    if edges != 0:
+    if edges == 0:
         compositor.edges = (lib.WLC_RESIZE_EDGE_LEFT if origin.x < halfw else (lib.WLC_RESIZE_EDGE_RIGHT if origin.x > halfw else 0)) | (lib.WLC_RESIZE_EDGE_TOP if origin.y < halfh else (lib.WLC_RESIZE_EDGE_BOTTOM if origin.y > halfh else 0))
 
     lib.wlc_view_set_state(view, lib.WLC_BIT_RESIZING, 1)
@@ -223,9 +223,31 @@ def pointer_motion(handle, time, position):
         dy = position.y - compositor.grab.y
         g = lib.wlc_view_get_geometry(compositor.view)
 
+        print('dx dy', dx, dy)
+
         if compositor.edges is not None:
-            mins = (80, 40)
-            
+            min_w = 80
+            min_h = 40
+
+            print('edges not None')
+
+            print(g.size.w, g.size.h, min_w, min_h)
+
+            if g.size.w >= min_w:
+                if compositor.edges & lib.WLC_RESIZE_EDGE_LEFT:
+                    g.size.w -= dx
+                    g.origin.x += dx
+                elif compositor.edges & lib.WLC_RESIZE_EDGE_RIGHT:
+                    g.size.w += dx
+
+            if g.size.h >= min_h:
+                if compositor.edges & lib.WLC_RESIZE_EDGE_TOP:
+                    g.size.h -= dy
+                    g.origin.y += dy
+                elif compositor.edges & lib.WLC_RESIZE_EDGE_BOTTOM:
+                    g.size.h += dy
+
+            lib.wlc_view_set_geometry(compositor.view, compositor.edges, g)
             
         else:
             print('dx is', dx)
