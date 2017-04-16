@@ -6,6 +6,13 @@ Python bindings for [wlc](https://github.com/Cloudef/wlc), using cffi.
 
 pywlc has been tested only with Python 3, but it might work with Python 2.
 
+Install
+-------
+
+Install as a normal python module:
+
+    $ python3 setup.py install
+
 Example
 -------
 

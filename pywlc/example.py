@@ -1,5 +1,5 @@
 from __future__ import division, print_function
-from wlc import ffi, lib
+from pywlc.wlc import ffi, lib
 
 from collections import namedtuple
 
