@@ -170,7 +170,17 @@ def keyboard_key(view, time, modifiers, key, state):
     print('sym', sym)
 
     if view:
-        pass
+        if (modifiers.mods & lib.WLC_BIT_MOD_CTRL) and sym == lib.XKB_KEY_q:
+            if state == lib.WLC_KEY_STATE_PRESSED:
+                lib.wlc_view_close(view)
+            return 1
+
+        elif (modifiers.mods & lib.WLC_BIT_MOD_CTRL) and sym == lib.XKB_KEY_Down:
+            if state == lib.WLC_KEY_STATE_PRESSED:
+                lib.wlc_view_send_to_back(view)
+                lib.wlc_view_focus(get_topmost(lib.wlc_view_get_output(view), 0))
+            return 1
+        
 
     if (modifiers.mods & lib.WLC_BIT_MOD_CTRL):
         if sym == lib.XKB_KEY_Escape and state == lib.WLC_KEY_STATE_PRESSED:
@@ -180,13 +190,17 @@ def keyboard_key(view, time, modifiers, key, state):
             weston_terminal = ffi.new('char[]', b'weston-terminal')
             args = ffi.new('char * []', [weston_terminal, ffi.NULL])
             lib.wlc_exec(weston_terminal, args)
-            # lib.wlc_exec(weston_terminal, ffi.NULL)
-            print('execd weston-terminal')
             return 1
 
-        if sym >= lib.XKB_KEY_1 and sym <= lib.XKB_KEY_9:
+        elif sym >= lib.XKB_KEY_1 and sym <= lib.XKB_KEY_9 and state == lib.WLC_KEY_STATE_PRESSED:
             if state == lib.WLC_KEY_STATE_PRESSED:
-                print('ctrl + number in 1-9')
+                memb = ffi.new('size_t *')
+                outputs = lib.wlc_get_outputs(memb)
+                scale = (sym - lib.XKB_KEY_1) + 1
+
+                print('num outputs', memb[0])
+                for i in range(memb[0]):
+                    lib.wlc_output_set_resolution(outputs[i], lib.wlc_output_get_resolution(outputs[i]), scale)
 
     return 0
 

@@ -293,17 +293,17 @@ void wlc_handle_set_user_data(wlc_handle, const void *userdata);
 /** Get linked custom data from handle. */
 void* wlc_handle_get_user_data(wlc_handle);
 
-/* /\** Add fd to event loop. Return value of callback is unused, you should return 0. *\/ */
-/* WLC_NONULLV(3) struct wlc_event_source* wlc_event_loop_add_fd(int fd, uint32_t mask, int (*cb)(int fd, uint32_t mask, void *userdata), void *userdata); */
+/** Add fd to event loop. Return value of callback is unused, you should return 0. */
+struct wlc_event_source* wlc_event_loop_add_fd(int fd, uint32_t mask, int (*cb)(int fd, uint32_t mask, void *userdata), void *userdata);
 
-/* /\** Add timer to event loop. Return value of callback is unused, you should return 0. *\/ */
-/* WLC_NONULLV(1) struct wlc_event_source* wlc_event_loop_add_timer(int (*cb)(void *userdata), void *userdata); */
+/** Add timer to event loop. Return value of callback is unused, you should return 0. */
+struct wlc_event_source* wlc_event_loop_add_timer(int (*cb)(void *userdata), void *userdata);
 
-/* /\** Update timer to trigger after delay. Returns true on success. *\/ */
-/* WLC_NONULL bool wlc_event_source_timer_update(struct wlc_event_source *source, int32_t ms_delay); */
+/** Update timer to trigger after delay. Returns true on success. */
+bool wlc_event_source_timer_update(struct wlc_event_source *source, int32_t ms_delay);
 
-/* /\** Remove event source from event loop. *\/ */
-/* WLC_NONULL void wlc_event_source_remove(struct wlc_event_source *source); */
+/** Remove event source from event loop. */
+void wlc_event_source_remove(struct wlc_event_source *source);
 
 /** -- Output API */
 
@@ -342,8 +342,8 @@ const struct wlc_size* wlc_output_get_resolution(wlc_handle);
  */
 const struct wlc_size* wlc_output_get_virtual_resolution(wlc_handle);
 
-/* /\** Set resolution. *\/ */
-/* WLC_NONULL void wlc_output_set_resolution(wlc_handle, const struct wlc_size *resolution, uint32_t scale); */
+/** Set resolution. */
+void wlc_output_set_resolution(wlc_handle, const struct wlc_size *resolution, uint32_t scale);
 
 /** Get scale factor. */
 uint32_t wlc_output_get_scale(wlc_handle);
