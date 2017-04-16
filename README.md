@@ -4,7 +4,9 @@ pywlc
 
 Python bindings for [wlc](https://github.com/Cloudef/wlc), using cffi.
 
-pywlc has been tested only with Python 3, but it might work with Python 2.
+pywlc currently provides just a thin wrapper, rather than full
+Pythonic wrappers for each function. It has been tested only with
+Python 3, but it might work with Python 2.
 
 Install
 -------
