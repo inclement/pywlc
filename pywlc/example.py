@@ -1,16 +1,17 @@
 from __future__ import division, print_function
 from pywlc.wlc import ffi, lib
 
-from collections import namedtuple
 
 class Compositor:
     view = None
     grab = None
     edges = None
 
+
 compositor = Compositor()
 '''Global object to hold details of any view that is currently being
 updated.'''
+
 
 def relayout(output):
     size = lib.wlc_output_get_virtual_resolution(output)
@@ -39,7 +40,9 @@ def relayout(output):
             g = ffi.new('struct wlc_geometry *')
             g.origin.x = w + ew if toggle else 0
             g.origin.y = y
-            g.size.w = size.w if ((1 - toggle) and j == positioned - 1) else (w if toggle else w + ew)
+            g.size.w = (
+                size.w if ((1 - toggle) and j == positioned - 1)
+                else (w if toggle else w + ew))
             g.size.h = h + eh if j < 2 else h
 
             lib.wlc_view_set_geometry(views[i], 0, g)
@@ -65,8 +68,7 @@ def relayout(output):
                 g.origin.y += parent_geometry.origin.y
 
             lib.wlc_view_set_geometry(views[i], 0, g)
-            
-    
+
 
 def get_topmost(output, offset):
     memb = ffi.new('size_t *')
@@ -75,8 +77,10 @@ def get_topmost(output, offset):
         return views[(memb[0] - 1 + offset) % memb[0]]
     return 0
 
+
 def start_interactive_move(view, origin):
     start_interactive_action(view, origin)
+
 
 def start_interactive_action(view, origin):
     if compositor.view:
@@ -89,6 +93,7 @@ def start_interactive_action(view, origin):
     lib.wlc_view_bring_to_front(view)
     return True
 
+
 def start_interactive_resize(view, edges, origin):
     g = lib.wlc_view_get_geometry(view)
     if not g or not start_interactive_action(view, origin):
@@ -99,7 +104,12 @@ def start_interactive_resize(view, edges, origin):
 
     compositor.edges = edges
     if edges == 0:
-        compositor.edges = (lib.WLC_RESIZE_EDGE_LEFT if origin.x < halfw else (lib.WLC_RESIZE_EDGE_RIGHT if origin.x > halfw else 0)) | (lib.WLC_RESIZE_EDGE_TOP if origin.y < halfh else (lib.WLC_RESIZE_EDGE_BOTTOM if origin.y > halfh else 0))
+        compositor.edges = (
+            (lib.WLC_RESIZE_EDGE_LEFT if origin.x < halfw
+             else (lib.WLC_RESIZE_EDGE_RIGHT if origin.x > halfw else 0))
+            |
+            (lib.WLC_RESIZE_EDGE_TOP if origin.y < halfh else
+             (lib.WLC_RESIZE_EDGE_BOTTOM if origin.y > halfh else 0)))
 
     lib.wlc_view_set_state(view, lib.WLC_BIT_RESIZING, 1)
 
@@ -114,39 +124,48 @@ def stop_interactive_action():
     compositor.grab = None
     compositor.edges = None
 
+
 @ffi.def_extern()
 def output_resolution(output, from_size, to_size):
     relayout(output)
-    
+
+
 @ffi.def_extern()
 def view_created(view):
-    lib.wlc_view_set_mask(view, lib.wlc_output_get_mask(lib.wlc_view_get_output(view)))
+    lib.wlc_view_set_mask(
+        view, lib.wlc_output_get_mask(lib.wlc_view_get_output(view)))
     lib.wlc_view_bring_to_front(view)
     lib.wlc_view_focus(view)
     relayout(lib.wlc_view_get_output(view))
     return 1
+
 
 @ffi.def_extern()
 def view_destroyed(view):
     lib.wlc_view_focus(get_topmost(lib.wlc_view_get_output(view), 0))
     relayout(lib.wlc_view_get_output(view))
 
+
 @ffi.def_extern()
 def view_focus(view, focus):
     lib.wlc_view_set_state(view, lib.WLC_BIT_ACTIVATED, focus)
+
 
 @ffi.def_extern()
 def view_request_move(view, origin):
     start_interactive_move(view, origin)
 
+
 @ffi.def_extern()
 def view_request_resize(view, edges, origin):
     start_interactive_resize(view, edges, origin)
+
 
 @ffi.def_extern()
 def view_request_geometry(view, geometry):
     pass
     # intentionally blank in example.c
+
 
 @ffi.def_extern()
 def keyboard_key(view, time, modifiers, key, state):
@@ -154,38 +173,46 @@ def keyboard_key(view, time, modifiers, key, state):
     sym = lib.wlc_keyboard_get_keysym_for_key(key, ffi.NULL)
 
     if view:
-        if (modifiers.mods & lib.WLC_BIT_MOD_CTRL) and sym == lib.XKB_KEY_q:
-            if state == lib.WLC_KEY_STATE_PRESSED:
-                lib.wlc_view_close(view)
-            return 1
+        if (modifiers.mods & lib.WLC_BIT_MOD_CTRL):
+            if sym == lib.XKB_KEY_q:
+                if state == lib.WLC_KEY_STATE_PRESSED:
+                    lib.wlc_view_close(view)
+                return 1
 
-        elif (modifiers.mods & lib.WLC_BIT_MOD_CTRL) and sym == lib.XKB_KEY_Down:
-            if state == lib.WLC_KEY_STATE_PRESSED:
-                lib.wlc_view_send_to_back(view)
-                lib.wlc_view_focus(get_topmost(lib.wlc_view_get_output(view), 0))
-            return 1
-        
+            elif sym == lib.XKB_KEY_Down:
+                if state == lib.WLC_KEY_STATE_PRESSED:
+                    lib.wlc_view_send_to_back(view)
+                    lib.wlc_view_focus(get_topmost(
+                        lib.wlc_view_get_output(view), 0))
+                return 1
 
     if (modifiers.mods & lib.WLC_BIT_MOD_CTRL):
-        if sym == lib.XKB_KEY_Escape and state == lib.WLC_KEY_STATE_PRESSED:
-            lib.wlc_terminate()
+        if sym == lib.XKB_KEY_Escape:
+            if state == lib.WLC_KEY_STATE_PRESSED:
+                lib.wlc_terminate()
             return 1
-        elif sym == lib.XKB_KEY_Return and state == lib.WLC_KEY_STATE_PRESSED:
-            weston_terminal = ffi.new('char[]', b'weston-terminal')
-            args = ffi.new('char * []', [weston_terminal, ffi.NULL])
-            lib.wlc_exec(weston_terminal, args)
+        elif sym == lib.XKB_KEY_Return:
+            if state == lib.WLC_KEY_STATE_PRESSED:
+                weston_terminal = ffi.new('char[]', b'weston-terminal')
+                args = ffi.new('char * []', [weston_terminal, ffi.NULL])
+                lib.wlc_exec(weston_terminal, args)
             return 1
 
-        elif sym >= lib.XKB_KEY_1 and sym <= lib.XKB_KEY_9 and state == lib.WLC_KEY_STATE_PRESSED:
+        elif sym >= lib.XKB_KEY_1 and sym <= lib.XKB_KEY_9:
             if state == lib.WLC_KEY_STATE_PRESSED:
                 memb = ffi.new('size_t *')
                 outputs = lib.wlc_get_outputs(memb)
                 scale = (sym - lib.XKB_KEY_1) + 1
 
                 for i in range(memb[0]):
-                    lib.wlc_output_set_resolution(outputs[i], lib.wlc_output_get_resolution(outputs[i]), scale)
+                    lib.wlc_output_set_resolution(
+                        outputs[i],
+                        lib.wlc_output_get_resolution(outputs[i]),
+                        scale)
+            return 1
 
     return 0
+
 
 @ffi.def_extern()
 def pointer_button(view, time, modifiers, button, state, position):
@@ -194,10 +221,10 @@ def pointer_button(view, time, modifiers, button, state, position):
     if state == lib.WLC_BUTTON_STATE_PRESSED:
         lib.wlc_view_focus(view)
 
-        if view is not None:
-            if (modifiers.mods & lib.WLC_BIT_MOD_CTRL) and button == lib.BTN_LEFT:
+        if view and (modifiers.mods & lib.WLC_BIT_MOD_CTRL):
+            if button == lib.BTN_LEFT:
                 start_interactive_move(view, position)
-            if (modifiers.mods & lib.WLC_BIT_MOD_CTRL) and button == lib.BTN_RIGHT:
+            if button == lib.BTN_RIGHT:
                 start_interactive_resize(view, 0, position)
 
     else:
@@ -207,6 +234,7 @@ def pointer_button(view, time, modifiers, button, state, position):
         return 1
 
     return 0
+
 
 @ffi.def_extern()
 def pointer_motion(handle, time, position):
@@ -234,7 +262,7 @@ def pointer_motion(handle, time, position):
                     g.size.h += dy
 
             lib.wlc_view_set_geometry(compositor.view, compositor.edges, g)
-            
+
         else:
             g.origin.x += dx
             g.origin.y += dy
@@ -242,10 +270,10 @@ def pointer_motion(handle, time, position):
 
         compositor.grab.x = position.x
         compositor.grab.y = position.y
-            
 
     lib.wlc_pointer_set_position(position)
     return 1 if compositor.view is not None else 0
+
 
 def main():
     lib.wlc_set_output_resolution_cb(lib.output_resolution)
@@ -263,6 +291,7 @@ def main():
         raise ValueError('wlc_init did not return 1')
 
     lib.wlc_run()
+
 
 if __name__ == "__main__":
     main()
