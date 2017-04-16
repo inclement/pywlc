@@ -1,4 +1,4 @@
-
+from os.path import dirname, join
 from cffi import FFI
 
 ffibuilder = FFI()
@@ -12,16 +12,18 @@ ffibuilder.set_source('wlc',
                       include_dirs=['/home/asandy/devel/wlc/include'],
                       libraries=['wlc'])
 
-with open('wlc_cdef.h', 'r') as fileh:
+cur_dir = dirname(__file__)
+with open(join(cur_dir, 'wlc_cdef.h'), 'r') as fileh:
     ffibuilder.cdef(fileh.read())
 
-with open('extern_cdef.h', 'r') as fileh:
+with open(join(cur_dir, 'extern_cdef.h'), 'r') as fileh:
     ffibuilder.cdef(fileh.read())
 
-with open('xkb_cdef.h', 'r') as fileh:
+with open(join(cur_dir, 'xkb_cdef.h'), 'r') as fileh:
     ffibuilder.cdef(fileh.read())
 
-with open('input-event-codes_cdef.h', 'r') as fileh:
+with open(join(cur_dir, 'input-event-codes_cdef.h'), 'r') as fileh:
     ffibuilder.cdef(fileh.read())
  
-ffibuilder.compile(verbose=True)
+if __name__ == "__main__":
+    ffibuilder.compile(verbose=True)

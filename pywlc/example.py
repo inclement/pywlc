@@ -247,8 +247,7 @@ def pointer_motion(handle, time, position):
     lib.wlc_pointer_set_position(position)
     return 1 if compositor.view is not None else 0
 
-if __name__ == "__main__":
-
+def main():
     lib.wlc_set_output_resolution_cb(lib.output_resolution)
     lib.wlc_set_view_created_cb(lib.view_created)
     lib.wlc_set_view_destroyed_cb(lib.view_destroyed)
@@ -264,3 +263,6 @@ if __name__ == "__main__":
         raise ValueError('wlc_init did not return 1')
 
     lib.wlc_run()
+
+if __name__ == "__main__":
+    main()
