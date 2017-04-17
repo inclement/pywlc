@@ -181,6 +181,9 @@ class WlcGeometry(StructWrapper):
             value = value.struct
         self.struct.size = value
 
+    def string(self):
+        return '<wlc_geometry with origin {} and size {}>'.format(self.origin, self.size)
+
 ## Callbacks
 
 callbacks = {
@@ -331,6 +334,7 @@ def view_positioner_get_anchor_rect(view):
 
 @args_to_cffi()
 def view_set_geometry(view, edges, geometry):
+    print('geometry is', geometry, geometry.origin, geometry.size, geometry.origin.x, geometry.origin.y, geometry.size.w, geometry.size.h)
     return lib.wlc_view_set_geometry(view, edges, geometry)
 
 @returns_to_python(WlcSize)
@@ -343,3 +347,6 @@ def view_get_geometry(view):
 
 def view_get_parent(view):
     return lib.wlc_view_get_parent(view)
+
+def view_close(view):
+    return lib.wlc_view_close(view)
