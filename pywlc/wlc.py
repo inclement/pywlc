@@ -21,12 +21,17 @@ def args_to_python(*orig_args):
     return args_to_python_decorator
 
 def returns_to_python(*orig_args):
-    def cast_returns_decorator(func):
+    def returns_to_python_decorator(func):
         @wraps(func)
         def new_func(*args, **kwargs):
             results = func(*args, **kwargs)
-            return [(cast(result) if cast is not None else result)
-                    for cast, result in zip(orig_args, results)]
+            if len(orig_args) == 1:
+                results = [results]
+            return_value = [(cast(result) if cast is not None else result)
+                            for cast, result in zip(orig_args, results)]
+            if len(orig_args) == 1:
+                return_value = return_value[0]
+            return return_value
         return new_func
     return returns_to_python_decorator
 
@@ -153,6 +158,28 @@ class WlcSize(StructWrapper):
     def string(self):
         return '<wlc_size w={} h={}>'.format(self.w, self.h)
 
+class WlcGeometry(StructWrapper):
+    declaration = 'struct wlc_geometry *'
+
+    @property
+    def origin(self):
+        return WlcPoint(self.struct.origin)
+
+    @origin.setter
+    def origin(self, value):
+        if isinstance(value, StructWrapper):
+            value = value.struct
+        self.struct.origin = value
+
+    @property
+    def size(self):
+        return WlcSize(self.struct.size)
+
+    @size.setter
+    def size(self, value):
+        if isinstance(value, StructWrapper):
+            value = value.struct
+        self.struct.size = value
 
 ## Callbacks
 
@@ -187,6 +214,7 @@ def set_view_destroyed_cb(func):
 
 @ffi.def_extern()
 def _view_focus(*args):
+    print('args', args)
     callbacks['view_focus'](*args)
 
 def set_view_focus_cb(func):
@@ -282,3 +310,36 @@ def view_focus(view):
 
 def view_get_output(view):
     return lib.wlc_view_get_output(view)
+
+@returns_to_python(WlcSize)
+def output_get_virtual_resolution(output):
+    return lib.wlc_output_get_virtual_resolution(output)
+
+def view_set_state(view, state, toggle):
+    lib.wlc_view_set_state(view, state, toggle)
+
+def output_get_views(output):
+    # Original function takes argument 'memb', which is just a pointer
+    memb = ffi.new('size_t *')
+    views = lib.wlc_output_get_views(output, memb)
+
+    return views, memb[0]
+    
+
+def view_positioner_get_anchor_rect(view):
+    return lib.wlc_view_positioner_get_anchor_rect(view)
+
+@args_to_cffi()
+def view_set_geometry(view, edges, geometry):
+    return lib.wlc_view_set_geometry(view, edges, geometry)
+
+@returns_to_python(WlcSize)
+def view_positioner_get_size(view):
+    return lib.wlc_view_positioner_get_size(view)
+
+@returns_to_python(WlcGeometry)
+def view_get_geometry(view):
+    return lib.wlc_view_get_geometry(view)
+
+def view_get_parent(view):
+    return lib.wlc_view_get_parent(view)
