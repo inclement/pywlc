@@ -2,6 +2,14 @@
 from pywlc.cwlc import ffi, lib
 from functools import wraps
 
+NULL = ffi.NULL
+
+def keysym(key):
+    name = 'XKB_KEY_{}'.format(key)
+    if not hasattr(lib, name):
+        raise ValueError('Could not find a keysym for {} ({})'.format(key, name))
+    return getattr(lib, name)
+
 def args_to_python(*orig_args):
     def args_to_python_decorator(func):
         @wraps(func)
@@ -53,10 +61,51 @@ class StructWrapper(object):
     def __repr__(self):
         return self.string()
 
+    def string(self):
+        return '<StructWrapper {}>'.format(str(self.struct))
+
     def copy(self):
         instance = self.__class__()
         for attribute in dir(self.struct):
             setattr(instance, attribute, getattr(self, attribute))
+
+
+class WlcModifiers(StructWrapper):
+    declaration = 'struct wlc_modifiers *'
+
+    @property
+    def leds(self):
+        return self.struct.leds
+
+    @leds.setter
+    def leds(self, value):
+        self.struct.leds = value
+
+    @property
+    def mods(self):
+        return self.struct.mods
+
+    @mods.setter
+    def mods(self, value):
+        self.struct.mods = value
+
+    @property
+    def modifiers(self):
+        mods = self.mods
+        modifiers = []
+        for modifier in ['shift', 'caps', 'ctrl', 'alt',
+                         'mod2', 'mod3', 'logo', 'mod5']:
+            if getattr(lib, 'WLC_BIT_MOD_{}'.format(modifier.upper())) & mods:
+                modifiers.append(modifier)
+
+        return modifiers
+
+    def __contains__(self, item):
+        return item in self.modifiers
+                       
+    def string(self):
+        return '<wlc_modifiers {}>'.format(self.modifiers)
+        
 
 class WlcPoint(StructWrapper):
     declaration = 'struct wlc_point *'
@@ -169,6 +218,7 @@ def set_view_request_geometry_cb(func):
     callbacks['view_request_geometry'] = func
 
 @ffi.def_extern()
+@args_to_python(None, None, WlcModifiers, None, None)
 def _keyboard_key(*args):
     return callbacks['keyboard_key'](*args)
 
@@ -198,5 +248,37 @@ def set_pointer_motion_cb(func):
 
 @args_to_cffi()
 def pointer_set_position(position):
-    print('position is', position)
     lib.wlc_pointer_set_position(position)
+
+@args_to_cffi()
+def keyboard_get_keysym_for_key(key, modifiers=None):
+    if modifiers is None:
+        modifiers = NULL
+    return lib.wlc_keyboard_get_keysym_for_key(key, modifiers)
+
+def terminate():
+    lib.wlc_terminate()
+
+def exec(name, *args):
+    name_arg = ffi.new('char[]', name.encode('utf-8'))
+    program_args = [name_arg]
+    for arg in args:
+        program_args.append(name_arg.encode('utf-8'))
+    program_args.append(ffi.NULL)
+
+    lib.wlc_exec(name_arg, program_args)
+    
+def view_set_mask(view, mask):
+    lib.wlc_view_set_mask(view, mask)
+
+def output_get_mask(output):
+    return lib.wlc_output_get_mask(output)
+
+def view_bring_to_front(view):
+    return lib.wlc_view_bring_to_front(view)
+
+def view_focus(view):
+    return lib.wlc_view_focus(view)
+
+def view_get_output(view):
+    return lib.wlc_view_get_output(view)
