@@ -3,7 +3,7 @@ from cffi import FFI
 
 ffibuilder = FFI()
 
-ffibuilder.set_source('pywlc.wlc',
+ffibuilder.set_source('pywlc.cwlc',
                       ('#include <wlc/wlc.h>\n'
                        '#include <sys/types.h>\n'
                        '#include <xkbcommon/xkbcommon-keysyms.h>\n'

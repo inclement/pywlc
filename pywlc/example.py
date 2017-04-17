@@ -1,5 +1,5 @@
 from __future__ import division, print_function
-from pywlc.wlc import ffi, lib
+from pywlc.cwlc import ffi, lib
 
 
 class Compositor:

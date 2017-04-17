@@ -1,2 +1,3 @@
 
-from pywlc.wlc import lib, ffi
+from pywlc.cwlc import lib, ffi
+from pywlc import wlc
