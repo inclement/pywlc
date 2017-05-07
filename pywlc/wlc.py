@@ -200,6 +200,15 @@ def set_output_resolution_cb(func):
     callbacks['output_resolution'] = func
 
 @ffi.def_extern()
+def _output_created(*args):
+    callbacks['output_created'](*args)
+    return 1
+
+def set_output_created_cb(func):
+    lib.wlc_set_output_created_cb(lib._output_created)
+    callbacks['output_created'] = func
+
+@ffi.def_extern()
 def _view_created(*args):
     return callbacks['view_created'](*args)
 
@@ -217,7 +226,6 @@ def set_view_destroyed_cb(func):
 
 @ffi.def_extern()
 def _view_focus(*args):
-    print('args', args)
     callbacks['view_focus'](*args)
 
 def set_view_focus_cb(func):
@@ -225,6 +233,7 @@ def set_view_focus_cb(func):
     callbacks['view_focus'] = func
 
 @ffi.def_extern()
+@args_to_python(None, WlcPoint)
 def _view_request_move(*args):
     callbacks['view_request_move'](*args)
 
@@ -233,6 +242,7 @@ def set_view_request_move_cb(func):
     callbacks['view_request_move'] = func
 
 @ffi.def_extern()
+@args_to_python(None, WlcPoint)
 def _view_request_resize(*args):
     callbacks['view_request_resize'](*args)
 
@@ -241,6 +251,7 @@ def set_view_request_resize_cb(func):
     callbacks['view_request_resize'] = func
 
 @ffi.def_extern()
+@args_to_python(None, WlcGeometry)
 def _view_request_geometry(*args):
     callbacks['view_request_geometry'](*args)
 
@@ -251,13 +262,15 @@ def set_view_request_geometry_cb(func):
 @ffi.def_extern()
 @args_to_python(None, None, WlcModifiers, None, None)
 def _keyboard_key(*args):
-    return callbacks['keyboard_key'](*args)
+    result = callbacks['keyboard_key'](*args)
+    return result
 
 def set_keyboard_key_cb(func):
     lib.wlc_set_keyboard_key_cb(lib._keyboard_key)
     callbacks['keyboard_key'] = func
 
 @ffi.def_extern()
+@args_to_python(None, None, WlcModifiers, None, None, WlcPoint)
 def _pointer_button(*args):
     return callbacks['pointer_button'](*args)
 
@@ -334,7 +347,6 @@ def view_positioner_get_anchor_rect(view):
 
 @args_to_cffi()
 def view_set_geometry(view, edges, geometry):
-    print('geometry is', geometry, geometry.origin, geometry.size, geometry.origin.x, geometry.origin.y, geometry.size.w, geometry.size.h)
     return lib.wlc_view_set_geometry(view, edges, geometry)
 
 @returns_to_python(WlcSize)
@@ -350,3 +362,9 @@ def view_get_parent(view):
 
 def view_close(view):
     return lib.wlc_view_close(view)
+
+def view_get_mask(view):
+    return lib.wlc_view_get_mask(view)
+
+def view_set_mask(view, mask):
+    lib.wlc_view_set_mask(view, mask)

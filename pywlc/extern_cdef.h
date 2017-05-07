@@ -13,6 +13,7 @@ extern "Python" bool _example_pointer_motion(wlc_handle, uint32_t, struct wlc_po
 
 
 extern "Python" void _output_resolution(wlc_handle, struct wlc_size *from, struct wlc_size *to);
+extern "Python" bool _output_created(wlc_handle);
 extern "Python" bool _view_created(wlc_handle);
 extern "Python" void _view_destroyed(wlc_handle);
 extern "Python" void _view_focus(wlc_handle, bool);
