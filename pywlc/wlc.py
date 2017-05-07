@@ -187,9 +187,34 @@ class WlcGeometry(StructWrapper):
 ## Callbacks
 
 callbacks = {
-    'output_resolution': None,
     }
 '''A dict of python callbacks to be used by the C extern functions.'''
+
+@ffi.def_extern()
+def _output_created(*args):
+    callbacks['output_created'](*args)
+    return 1
+
+def set_output_created_cb(func):
+    lib.wlc_set_output_created_cb(lib._output_created)
+    callbacks['output_created'] = func
+
+@ffi.def_extern()
+def _output_destroyed(*args):
+    callbacks['output_destroyed'](*args)
+    return 1
+
+def set_output_destroyed_cb(func):
+    lib.wlc_set_output_destroyed_cb(lib._output_destroyed)
+    callbacks['output_destroyed'] = func
+
+@ffi.def_extern()
+def _output_focus(*args):
+    callbacks['output_focus'](*args)
+
+def set_output_focus_cb(func):
+    lib.wlc_set_output_focus_cb(lib._output_focus)
+    callbacks['output_focus'] = func
 
 @ffi.def_extern()
 def _output_resolution(*args):
@@ -200,13 +225,36 @@ def set_output_resolution_cb(func):
     callbacks['output_resolution'] = func
 
 @ffi.def_extern()
-def _output_created(*args):
-    callbacks['output_created'](*args)
-    return 1
+def _output_render_pre(*args):
+    callbacks['output_render_pre'](*args)
 
-def set_output_created_cb(func):
-    lib.wlc_set_output_created_cb(lib._output_created)
-    callbacks['output_created'] = func
+def set_output_render_pre_cb(func):
+    lib.wlc_set_output_render_pre_cb(lib._output_render_pre)
+    callbacks['output_render_pre'] = func
+
+@ffi.def_extern()
+def _output_render_post(*args):
+    callbacks['output_render_post'](*args)
+
+def set_output_render_post_cb(func):
+    lib.wlc_set_output_render_post_cb(lib._output_render_post)
+    callbacks['output_render_post'] = func
+
+@ffi.def_extern()
+def _output_context_created(*args):
+    callbacks['output_context_created'](*args)
+
+def set_output_context_created_cb(func):
+    lib.wlc_set_output_context_created_cb(lib._output_context_created)
+    callbacks['output_context_created'] = func
+
+@ffi.def_extern()
+def _output_context_destroyed(*args):
+    callbacks['output_context_destroyed'](*args)
+
+def set_output_context_destroyed_cb(func):
+    lib.wlc_set_output_context_destroyed_cb(lib._output_context_destroyed)
+    callbacks['output_context_destroyed'] = func
 
 @ffi.def_extern()
 def _view_created(*args):
@@ -233,6 +281,31 @@ def set_view_focus_cb(func):
     callbacks['view_focus'] = func
 
 @ffi.def_extern()
+def _view_move_to_output(*args):
+    callbacks['view_move_to_output'](*args)
+
+def set_view_move_to_output_cb(func):
+    lib.wlc_set_view_move_to_output_cb(lib._view_move_to_output)
+    callbacks['view_move_to_output'] = func
+
+@ffi.def_extern()
+@args_to_python(None, WlcGeometry)
+def _view_request_geometry(*args):
+    callbacks['view_request_geometry'](*args)
+
+def set_view_request_geometry_cb(func):
+    lib.wlc_set_view_request_geometry_cb(lib._view_request_geometry)
+    callbacks['view_request_geometry'] = func
+
+@ffi.def_extern()
+def _view_request_state(*args):
+    callbacks['view_request_state'](*args)
+
+def set_view_request_state_cb(func):
+    lib.wlc_set_view_request_state_cb(lib._view_request_state)
+    callbacks['view_request_state'] = func
+
+@ffi.def_extern()
 @args_to_python(None, WlcPoint)
 def _view_request_move(*args):
     callbacks['view_request_move'](*args)
@@ -251,13 +324,28 @@ def set_view_request_resize_cb(func):
     callbacks['view_request_resize'] = func
 
 @ffi.def_extern()
-@args_to_python(None, WlcGeometry)
-def _view_request_geometry(*args):
-    callbacks['view_request_geometry'](*args)
+def _view_render_pre(*args):
+    callbacks['view_render_pre'](*args)
 
-def set_view_request_geometry_cb(func):
-    lib.wlc_set_view_request_geometry_cb(lib._view_request_geometry)
-    callbacks['view_request_geometry'] = func
+def set_view_render_pre_cb(func):
+    lib.wlc_set_view_render_pre_cb(lib._view_render_pre)
+    callbacks['view_render_pre'] = func
+
+@ffi.def_extern()
+def _view_render_post(*args):
+    callbacks['view_render_post'](*args)
+
+def set_view_render_post_cb(func):
+    lib.wlc_set_view_render_post_cb(lib._view_render_post)
+    callbacks['view_render_post'] = func
+
+@ffi.def_extern()
+def _view_properties_updated(*args):
+    callbacks['view_properties_updated'](*args)
+
+def set_view_properties_updated_cb(func):
+    lib.wlc_set_view_properties_updated_cb(lib._view_properties_updated)
+    callbacks['view_properties_updated'] = func
 
 @ffi.def_extern()
 @args_to_python(None, None, WlcModifiers, None, None)
@@ -279,6 +367,15 @@ def set_pointer_button_cb(func):
     callbacks['pointer_button'] = func
 
 @ffi.def_extern()
+@args_to_python(None, None, WlcModifiers, None, None)
+def _pointer_scroll(*args):
+    return callbacks['pointer_scroll'](*args)
+
+def set_pointer_scroll_cb(func):
+    lib.wlc_set_pointer_scroll_cb(lib._pointer_scroll)
+    callbacks['pointer_scroll'] = func
+
+@ffi.def_extern()
 @args_to_python(None, None, WlcPoint)
 def _pointer_motion(*args):
     return callbacks['pointer_motion'](*args)
@@ -287,6 +384,30 @@ def set_pointer_motion_cb(func):
     lib.wlc_set_pointer_motion_cb(lib._pointer_motion)
     callbacks['pointer_motion'] = func
 
+@ffi.def_extern()
+@args_to_python(None, None, WlcModifiers, None, None, None)
+def _touch(*args):
+    return callbacks['touch'](*args)
+
+def set_touch_cb(func):
+    lib.wlc_set_touch_cb(lib._touch)
+    callbacks['touch'] = func
+
+@ffi.def_extern()
+def _compositor_ready(*args):
+    return callbacks['compositor_ready'](*args)
+
+def set_compositor_ready_cb(func):
+    lib.wlc_set_compositor_ready_cb(lib._compositor_ready)
+    callbacks['compositor_ready'] = func
+
+@ffi.def_extern()
+def _compositor_terminate(*args):
+    return callbacks['compositor_terminate'](*args)
+
+def set_compositor_terminate_cb(func):
+    lib.wlc_set_compositor_terminate_cb(lib._compositor_terminate)
+    callbacks['compositor_terminate'] = func
 
 ## API functions
 
